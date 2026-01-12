@@ -1,8 +1,8 @@
-#include<game.hpp>
+#include"game.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-
+#include <vector>
 static bool is_tail(char c);
 static bool is_head(char c);
 static bool is_snake(char c);
@@ -10,11 +10,9 @@ static char body_to_tail(char c);
 static char head_to_body(char c);
 static unsigned int get_next_row(unsigned int cur_row, char c);
 static unsigned int get_next_col(unsigned int cur_col, char c);
-static void find_head(game_t *game, unsigned int snum);
-static char next_square(game_t *game, unsigned int snum);
-static void update_tail(game_t *game, unsigned int snum);
-static void update_head(game_t *game, unsigned int snum);
-game_t *create_default_game(int rows, int columns);
+
+
+
 game_t *create_default_game(int rows, int columns) {
     game_t *newGame = new game_t(rows, columns);
 
@@ -34,6 +32,10 @@ game_t *create_default_game(int rows, int columns) {
         newGame->board[i][columns] = '\n';
         newGame->board[i][columns+1] = '\0';
     }
+    newGame->board[2][2]='d';
+    newGame->board[2][3]='>';
+    newGame->board[2][4]='D';
+    newGame->board[2][9]='*';
     newGame->num_rows = rows;
     snake_t newSnake;
     newSnake.head_col = 4;
@@ -57,6 +59,12 @@ game_t::game_t(int rows,int columns){
     this->board = new char*[rows];
     this->num_rows=rows;
     this->num_columns=columns;
+    this->num_snakes=0;
+}
+game_t::game_t(){
+    this->board = nullptr;
+    this->num_rows=0;
+    this->num_columns=0;
     this->num_snakes=0;
 }
 char game_t::get_board_at(unsigned int row, unsigned int col){
@@ -111,8 +119,8 @@ char game_t::next_square(unsigned int snum) {
 }
 
 void game_t::update_head(unsigned int snum) {
-    int headRow=(this->snakes+snum)->head_row;
-    int headCol=(this->snakes+snum)->head_col;
+    int headRow=(this->snakes[snum]).head_row;
+    int headCol=(this->snakes[snum]).head_col;
     switch (this->get_board_at(headRow,headCol))
     {
     case 'A':
@@ -143,8 +151,8 @@ void game_t::update_head(unsigned int snum) {
 void game_t::update_tail(unsigned int snum) {
     int tailRow=(this->snakes+snum)->tail_row;
     int tailCol=(this->snakes+snum)->tail_col;
-    int nextRow;
-    int nextCol;
+    int nextRow=0;
+    int nextCol=0;
     switch (this->get_board_at(tailRow,tailCol))
     {
     case 's':
@@ -245,7 +253,7 @@ void game_t::update_tail(unsigned int snum) {
 }
 
 void game_t::update_game(int (*add_food)(game_t *game)) {
-    for(int i=0;i<this->num_snakes;i++){
+    for(unsigned int i=0;i<this->num_snakes;i++){
         int headRow=(this->snakes+i)->head_row;
         int headCol=(this->snakes+i)->head_col;
         int nextRow=get_next_row(headRow,this->get_board_at(headRow,headCol));
@@ -288,14 +296,14 @@ void game_t::find_head(unsigned int snum) {
 game_t *initialize_snakes(game_t *game) {
   int snum=0;
   snake_t *snakes=new snake_t[game->num_snakes];
-  for(int i=0;i<game->num_rows;i++){
-    for(int j=0;j<sizeof*(game->board);j++){
+  for(unsigned int i=0;i<game->num_rows;i++){
+    for(unsigned int j=0;j<(game->num_columns);j++){
       if(is_tail(game->board[i][j])){
-        snake_t newSnake={i,j,true,0,0};
+        snake_t newSnake={i,j,0,0,true};
         snakes[snum]=newSnake;
         game->snakes=snakes;
         game->num_snakes=snum+1;
-        find_head(game,snum);
+        game->find_head(snum);
         
         snum++;
       }
@@ -307,7 +315,7 @@ game_t *initialize_snakes(game_t *game) {
 
 static bool is_tail(char c) {
 
-  return (c=='s'||c=='s'||c=='d'||c=='w');
+  return (c=='s'||c=='a'||c=='d'||c=='w');
 }
 
 
@@ -317,7 +325,7 @@ static bool is_head(char c) {
 
 
 static bool is_snake(char c) {
-  char* snk="wasd^<v>WASDx";
+  const char* snk="wasd^<v>WASDx";
   for (int i=0;i<12;i++) {
     if (*(snk+i)==c) {
       return true;
@@ -377,22 +385,101 @@ static unsigned int get_next_col(unsigned int cur_col, char c) {
   return cur_col;
 }
 
-char *read_line(FILE *fp) {
-  char *content=new char[50];
-  return fgets(content,50,fp);
+static char* read_line(FILE *fp) {
+    const size_t BUF_INIT = 64;
+    size_t buf_size = BUF_INIT;
+    char* buf = new char[buf_size];
+    char* pos = buf;
+    int c;
 
+    if (fp == nullptr) {
+        delete[] buf;
+        return nullptr;
+    }
+
+  
+    while ((c = fgetc(fp)) != EOF && c != '\n') {
+        if (pos - buf >= (int)buf_size - 1) { 
+            buf_size *= 2;
+            char* new_buf = new char[buf_size];
+            memcpy(new_buf, buf, pos - buf);
+            delete[] buf;
+            buf = new_buf;
+            pos = buf + (pos - buf);
+        }
+        *pos++ = (char)c;
+    }
+
+    if (pos == buf && c == EOF) {
+        delete[] buf;
+        return nullptr;
+    }
+
+    *pos++ = '\n';
+    *pos = '\0';
+    return buf;
 }
 
 game_t *load_board(FILE *fp) {
-  game_t *newGame=new game_t(18,20);
-  char **board=new char*[18];
-  int i=0;
-  while (board[i]=read_line(fp))
-  {
-    i++;
-  }
-  newGame->num_rows=i;
-  newGame->board=board;
-  return newGame;
-  return NULL;
+    if (fp == nullptr) {
+        fprintf(stderr, "Error: Null file pointer in load_board\n");
+        return nullptr;
+    }
+
+    std::vector<char*> lines; 
+    unsigned int num_rows = 0;
+    unsigned int max_cols = 0;
+    char* line = nullptr;
+
+    while ((line = read_line(fp)) != nullptr) {
+        lines.push_back(line);
+        num_rows++;
+
+        size_t line_len = strlen(line);
+        if (line_len > 0 && line[line_len - 1] == '\n') {
+            line_len--;
+        }
+        if (line_len > max_cols) {
+            max_cols = line_len;
+        }
+    }
+
+
+    if (num_rows == 0) {
+        fprintf(stderr, "Error: Empty file in load_board\n");
+        for (char* l : lines) delete[] l;
+        return nullptr;
+    }
+
+
+    game_t *newGame = new game_t(num_rows, max_cols);
+    newGame->num_rows = num_rows;
+    newGame->num_columns = max_cols;
+    for (unsigned int i = 0; i < num_rows; i++) {
+        char* src_line = lines[i];
+
+        newGame->board[i] = new char[max_cols + 2];
+        memset(newGame->board[i], ' ', max_cols + 2); 
+
+
+        size_t src_len = strlen(src_line);
+        if (src_len > 0 && src_line[src_len - 1] == '\n') {
+            src_len--; 
+        }
+        for (unsigned int j = 0; j < max_cols; j++) {
+            if (j < src_len) {
+                newGame->board[i][j] = src_line[j];
+            } else {
+                newGame->board[i][j] = ' '; 
+            }
+        }
+        newGame->board[i][max_cols] = '\n';    
+        newGame->board[i][max_cols + 1] = '\0';
+    }
+
+    for (char* l : lines) {
+        delete[] l;
+    }
+
+    return newGame;
 }

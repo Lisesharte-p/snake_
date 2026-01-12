@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
+#include<string>
 unsigned int det_rand(unsigned int *game) {
   if (*game == 0) {
     *game = 1;
@@ -70,7 +70,7 @@ unsigned int snake_seed = 1;
 void random_turn(game_t *game, int snum) {
   snake_t *snake = &(game->snakes[snum]);
   char cur_head = game->board[snake->head_row][snake->head_col];
-  char *heads = "<v>^";
+  std::string heads = "WASD";
   int i;
   for (i = 0; i < 4; ++i) {
     if (heads[i] == cur_head)
@@ -82,6 +82,6 @@ void random_turn(game_t *game, int snum) {
     i -= 1;
   }
   i = i % 4;
-
+  i=abs(i);
   game->board[snake->head_row][snake->head_col] = heads[i];
 }

@@ -10,7 +10,7 @@
 #include <time.h>
 #include <unistd.h>
 
-// This code uses some pretty bad hacks, and should not be used as a "good" reference.
+
 
 struct timespec game_interval = {1, 0L};
 game_t *game = NULL;
@@ -47,7 +47,7 @@ int get_raw_char() {
 
 void print_fullscreen_board(game_t *game) {
   fprintf(stdout, "\033[2J\033[H");
-  print_board(game, stdout);
+  game->print_board(stdout);
 }
 
 void *game_loop(void *_) {
@@ -59,8 +59,7 @@ void *game_loop(void *_) {
 
     pthread_mutex_lock(&game_mutex);
     int live_snakes = 0;
-    // non-player controlled snakes randomly turn every 6 steps
-    for (int j = 0; j < game->num_snakes; j++) {
+    for (unsigned int j = 0; j < game->num_snakes; j++) {
       if (game->snakes[j].live) {
         live_snakes += 1;
         if (j >= 1 && timestep % 6 == 0) {
@@ -68,7 +67,7 @@ void *game_loop(void *_) {
         }
       }
     }
-    update_game(game, deterministic_food);
+    game->update_game(deterministic_food);
     pthread_mutex_unlock(&game_mutex);
 
     print_fullscreen_board(game);
@@ -137,7 +136,7 @@ int main(int argc, char *argv[]) {
     game = load_board(fp);
     game = initialize_snakes(game);
   } else {
-    game = create_default_game();
+    game = create_default_game(30,40);
   }
 
   pthread_t thread_id;
