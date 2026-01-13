@@ -256,12 +256,12 @@ void game_t::update_tail(unsigned int snum) {
 }
 
 void game_t::update_game(int (*add_food)(game_t *game)) {
-    for(unsigned int i=0;i<this->num_snakes;i++){
+    for(int i=0;i<this->num_snakes;i++){
         int headRow=(this->snakes+i)->head_row;
         int headCol=(this->snakes+i)->head_col;
         int nextRow=get_next_row(headRow,this->get_board_at(headRow,headCol));
         int nextCol=get_next_col(headCol,this->get_board_at(headRow,headCol));
-        if(this->get_board_at(nextRow,nextCol)=='#'||is_snake(this->get_board_at(nextRow,nextCol))){
+        if(this->get_board_at(nextRow,nextCol)=='#'||is_snake(this->next_square(i))){
             set_board_at(headRow,headCol,'x');
             (this->snakes+i)->live=false;
             continue;
