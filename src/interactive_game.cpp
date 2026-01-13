@@ -62,7 +62,7 @@ void *game_loop(void *_) {
     for (unsigned int j = 0; j < game->num_snakes; j++) {
       if (game->snakes[j].live) {
         live_snakes += 1;
-        if (j >= 1 && timestep % 6 == 0) {
+        if (j >= 2 && timestep % 6 == 0) {
           random_turn(game, j);
         }
       }

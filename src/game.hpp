@@ -24,6 +24,7 @@ public:
   unsigned int num_snakes;
   snake_t *snakes;
   game_t(int rows,int columns);
+  game_t(const game_t& other); 
   game_t();
   ~game_t();
   char get_board_at(unsigned int row, unsigned int col);

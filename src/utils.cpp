@@ -63,6 +63,20 @@ void redirect_snake(game_t *game, char input_direction) {
   } else if (input_direction == 'd') {
     game->board[row][col] = 'D';
   }
+  row = (game->snakes+1)->head_row;
+  col = (game->snakes+1)->head_col;
+  if (!(game->snakes+1)->live) {
+    return;
+  }
+    if (input_direction == 'i') {
+    game->board[row][col] = 'W';
+  } else if (input_direction == 'j') {
+    game->board[row][col] = 'A';
+  } else if (input_direction == 'k') {
+    game->board[row][col] = 'S';
+  } else if (input_direction == 'l') {
+    game->board[row][col] = 'D';
+  }
 }
 
 unsigned int snake_seed = 1;
