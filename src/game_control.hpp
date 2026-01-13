@@ -32,7 +32,7 @@ public:
     const game_t* get_game() const { return game; }
     
     bool is_paused() const { return state == GameState::PAUSED; }
-    
+
 private:
     game_t* game;
     GameState state;

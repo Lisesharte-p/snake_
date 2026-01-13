@@ -137,6 +137,7 @@ int main(int argc, char *argv[]) {
     game = initialize_snakes(game);
   } else {
     game = create_default_game(30,40);
+    game = initialize_snakes(game);
   }
 
   pthread_t thread_id;

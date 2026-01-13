@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <vector>
+#include<set>
 static bool is_tail(char c);
 static bool is_head(char c);
 static bool is_snake(char c);
@@ -37,15 +38,15 @@ game_t *create_default_game(int rows, int columns) {
     newGame->board[2][4]='D';
     newGame->board[2][9]='*';
     newGame->num_rows = rows;
-    snake_t newSnake;
-    newSnake.head_col = 4;
-    newSnake.head_row = 2;
-    newSnake.tail_col = 2;
-    newSnake.tail_row = 2;
-    newSnake.live = true;
-    newGame->num_snakes = 1;
-    newGame->snakes = new snake_t[newGame->num_snakes];
-    newGame->snakes[0] = newSnake;
+    // snake_t newSnake;
+    // newSnake.head_col = 4;
+    // newSnake.head_row = 2;
+    // newSnake.tail_col = 2;
+    // newSnake.tail_row = 2;
+    // newSnake.live = true;
+    // newGame->num_snakes = 1;
+    // newGame->snakes = new snake_t[newGame->num_snakes];
+    // newGame->snakes[0] = newSnake;
     return newGame;
 } //测试基础类
 
@@ -60,12 +61,14 @@ game_t::game_t(int rows,int columns){
     this->num_rows=rows;
     this->num_columns=columns;
     this->num_snakes=0;
+    this->snakes=nullptr;
 }
 game_t::game_t(){
     this->board = nullptr;
     this->num_rows=0;
     this->num_columns=0;
     this->num_snakes=0;
+    this->snakes=nullptr;
 }
 char game_t::get_board_at(unsigned int row, unsigned int col){
     return this->board[row][col];
@@ -275,41 +278,112 @@ void game_t::update_game(int (*add_food)(game_t *game)) {
 }
 
 void game_t::find_head(unsigned int snum) {
-  int nowRow=(this->snakes+snum)->tail_row;
-  int nowCol=(this->snakes+snum)->tail_col;
-  while(true){
-    nowRow=get_next_row(nowRow,get_board_at(nowRow,nowCol));
-    nowCol=get_next_col(nowCol,get_board_at(nowRow,nowCol));
-    if(is_head(get_board_at(nowRow,nowCol))){
-        (this->snakes+snum)->head_row=nowRow;
-        (this->snakes+snum)->head_col=nowCol;
-        (this->snakes+snum)->live=true;
-        if(get_board_at(nowRow,nowCol)=='x'){
-          (this->snakes+snum)->live=false;
-        }
-        break;
-    }
-  }
+    int nowRow = static_cast<int>((this->snakes + snum)->tail_row);
+    int nowCol = static_cast<int>((this->snakes + snum)->tail_col);
+    int initialRow = nowRow;
+    int initialCol = nowCol;
+    std::cout << "Accessing snakes[" << snum << "]" << std::endl;
 
-  return;
+    const int MAX_ITERATIONS = 1000;  // Arbitrary limit based on expected snake length; adjust as needed
+    int iterations = 0;
+    std::set<std::pair<int, int>> visited;  // Track positions to detect cycles early
+    visited.insert({nowRow, nowCol});
+
+    while (true) {
+        iterations++;
+        if (iterations > MAX_ITERATIONS) {
+            std::cerr << "Error: Potential infinite loop in find_head for snake " << snum << std::endl;
+            (this->snakes + snum)->live = false;  // Mark as dead/invalid
+            break;
+        }
+
+        // Get current char *before* updating (fix order bug)
+        char currentChar = get_board_at(static_cast<unsigned int>(nowRow), static_cast<unsigned int>(nowCol));
+
+        // Check if valid snake part (prevent stuck on non-snake)
+        if (!is_snake(currentChar)) {
+            std::cerr << "Error: Non-snake char encountered at (" << nowRow << ", " << nowCol << ")" << std::endl;
+            (this->snakes + snum)->live = false;
+            break;
+        }
+
+        // Update using SAME char for both (fix order bug)
+        int nextRow = static_cast<int>(get_next_row(static_cast<unsigned int>(nowRow), currentChar));
+        int nextCol = static_cast<int>(get_next_col(static_cast<unsigned int>(nowCol), currentChar));
+
+        // Bounds check (prevent SEGV)
+        if (nextRow < 0 || nextRow >= static_cast<int>(num_rows) ||
+            nextCol < 0 || nextCol >= static_cast<int>(num_columns)) {
+            std::cerr << "Error: Out-of-bounds traversal at (" << nextRow << ", " << nextCol << ")" << std::endl;
+            (this->snakes + snum)->live = false;
+            break;
+        }
+
+        nowRow = nextRow;
+        nowCol = nextCol;
+
+        // Cycle detection (improved with set)
+        std::pair<int, int> pos = {nowRow, nowCol};
+        if (visited.count(pos)) {
+            std::cerr << "Error: Cycle detected in snake body for snake " << snum << std::endl;
+            (this->snakes + snum)->live = false;
+            break;
+        }
+        visited.insert(pos);
+
+        // Head check
+        if (is_head(get_board_at(static_cast<unsigned int>(nowRow), static_cast<unsigned int>(nowCol)))) {
+            (this->snakes + snum)->head_row = static_cast<unsigned int>(nowRow);
+            (this->snakes + snum)->head_col = static_cast<unsigned int>(nowCol);
+            (this->snakes + snum)->live = true;
+            if (get_board_at(static_cast<unsigned int>(nowRow), static_cast<unsigned int>(nowCol)) == 'x') {
+                (this->snakes + snum)->live = false;
+            }
+            break;
+        }
+    }
 }
 game_t *initialize_snakes(game_t *game) {
-  int snum=0;
-  snake_t *snakes=new snake_t[game->num_snakes];
-  for(unsigned int i=0;i<game->num_rows;i++){
-    for(unsigned int j=0;j<(game->num_columns);j++){
-      if(is_tail(game->board[i][j])){
-        snake_t newSnake={i,j,0,0,true};
-        snakes[snum]=newSnake;
-        game->snakes=snakes;
-        game->num_snakes=snum+1;
-        game->find_head(snum);
-        
-        snum++;
-      }
+    if (!game) return nullptr;
+    
+    if (game->snakes != nullptr) {
+        delete[] game->snakes;
     }
-  }
-  return game;
+    game->num_snakes = 0;
+    
+    snake_t *snakes = nullptr;
+    unsigned int snum = 0;
+    
+    for (unsigned int i = 0; i < game->num_rows; i++) {
+        for (unsigned int j = 0; j < game->num_columns; j++) {
+            if (is_tail(game->board[i][j])) {
+                snake_t newSnake;
+                newSnake.tail_row = i;
+                newSnake.tail_col = j;
+                newSnake.live = true;
+                
+                snake_t *temp = new snake_t[snum + 1];
+                for (unsigned int k = 0; k < snum; k++) {
+                    temp[k] = snakes[k];
+                }
+                temp[snum] = newSnake;
+                delete[] snakes;
+                snakes = temp;
+                
+                snum++;
+            }
+        }
+    }
+    
+    game->snakes = snakes;
+    game->num_snakes = snum;
+    
+    // 移动到这里：现在 game->snakes 已设置，可以安全调用
+    for (unsigned int k = 0; k < snum; k++) {
+        game->find_head(k);  // 假设这是 find_tail 的功能
+    }
+    
+    return game;
 }
 
 
@@ -366,10 +440,10 @@ static char head_to_body(char c) {
 static unsigned int get_next_row(unsigned int cur_row, char c) {
 
   if (c=='v'||c=='s'||c=='S') {
-    return cur_row+1;
+    return cur_row-1;
   }
   if (c=='^'||c=='w'||c=='W') {
-    return cur_row-1;
+    return cur_row+1;
   }
   return cur_row;
 }
@@ -397,17 +471,17 @@ static char* read_line(FILE *fp) {
         return nullptr;
     }
 
-  
     while ((c = fgetc(fp)) != EOF && c != '\n') {
-        if (pos - buf >= (int)buf_size - 1) { 
+        if (pos - buf >= static_cast<ssize_t>(buf_size) - 1) {  // 使用 static_cast 避免 signed/unsigned 警告
             buf_size *= 2;
+            size_t offset = pos - buf;  // 先计算偏移（delete 前，安全）
             char* new_buf = new char[buf_size];
-            memcpy(new_buf, buf, pos - buf);
-            delete[] buf;
+            memcpy(new_buf, buf, offset);
+            delete[] buf;  // 现在释放
             buf = new_buf;
-            pos = buf + (pos - buf);
+            pos = buf + offset;  // 使用预计算的 offset
         }
-        *pos++ = (char)c;
+        *pos++ = static_cast<char>(c);
     }
 
     if (pos == buf && c == EOF) {
