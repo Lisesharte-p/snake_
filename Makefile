@@ -1,6 +1,7 @@
 CXX = g++
 CC = gcc
-CXXFLAGS = -Wall -Wno-unused-function -Wconversion -std=c++23 -g -lsfml-graphics -lsfml-window -lsfml-system -fsanitize=address -fsanitize=undefined 
+CXXFLAGS = -Wall -Wno-unused-function -Wconversion -std=c++23 -g -lsfml-graphics -lsfml-window -lsfml-system -O2
+DBGFLAGS= -Wall -Wno-unused-function -Wconversion -std=c++23 -g -lsfml-graphics -lsfml-window -lsfml-system -fsanitize=address -fsanitize=undefined
 CFLAGS = -Wall -Wno-unused-function -Wconversion -std=c99 -g
 LDFLAGS =
 SNAKE_DEPS = src/snake.o src/utils.o src/game.o
@@ -19,9 +20,10 @@ endif
 interactive-snake: $(INTERACTIVE_DEPS)
 	$(CXX) -o $@ $^ -pthread $(CXXFLAGS) $(LDFLAGS)
 
+snk_gui_dbg:$(SNKAE_DEPS)
+	$(CXX) -o $@ $^ -pthread $(DBGFLAGS)$(LDFLAGS)
 snk_gui:$(SNKAE_DEPS)
 	$(CXX) -o $@ $^ -pthread $(CXXFLAGS) $(LDFLAGS)
-
 %.o: %.cpp
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
