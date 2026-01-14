@@ -99,6 +99,9 @@ int main(int argc, char* argv[]) {
             );
             renderer.get_window().draw(game_over);
             renderer.get_window().display();
+        }else if(controller.get_state()==GameState::MENU){
+            map_selector.set_active(true);
+            map_selector.render();
         }
     }
     
