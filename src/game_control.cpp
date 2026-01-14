@@ -57,10 +57,11 @@ void GameController::reset_game() {
        
         if (old_game) {
           
-            create_default_map();
             delete old_game;
         }
     }
+    state = GameState::MENU;
+
 }
 
 void GameController::update() {

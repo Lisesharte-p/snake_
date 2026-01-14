@@ -25,7 +25,7 @@ public:
     bool is_active() const { return active; }
     void set_active(bool a) { active = a; }
     std::vector<MapInfo> maps;
-private:
+private: 
     GameController& game_controller;
     SFMLRenderer& renderer;
 
