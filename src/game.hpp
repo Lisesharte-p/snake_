@@ -38,8 +38,15 @@ public:
   void find_head(unsigned int snum);
 };
 
+
+static bool is_tail(char c);
+static bool is_head(char c);
+static bool is_snake(char c);
 static char body_to_tail(char c);
 static char head_to_body(char c);
+static unsigned int get_next_row(unsigned int cur_row, char c);
+static unsigned int get_next_col(unsigned int cur_col, char c);
+
 game_t *initialize_snakes(game_t *game);
 game_t *load_board(FILE *fp);
 game_t *create_default_game(int rows, int columns);

@@ -81,22 +81,33 @@ void redirect_snake(game_t *game, char input_direction) {
 }
 
 unsigned int snake_seed = 1;
-
+bool is_snake1(char c) {
+  const char* snk="wasd^<v>WASDx";
+  for (int i=0;i<12;i++) {
+    if (*(snk+i)==c) {
+      return true;
+    }
+  }
+  return false;
+}
 void random_turn(game_t *game, int snum) {
   snake_t *snake = &(game->snakes[snum]);
   char cur_head = game->board[snake->head_row][snake->head_col];
-  std::string heads = "WASD";
-  int i;
-  for (i = 0; i < 4; ++i) {
-    if (heads[i] == cur_head)
-      break;
+  if((is_snake1(game->next_square(snum))||game->next_square(snum)=='#')){
+    std::string heads = "WASD";
+    int i;
+    for (i = 0; i < 4; ++i) {
+      if (heads[i] == cur_head)
+        break;
+    }
+    if (det_rand(&snake_seed) % 2 == 0) {
+      i += 1;
+    } else {
+      i -= 1;
+    }
+    i = i % 4;
+    i=abs(i);
+    game->board[snake->head_row][snake->head_col] = heads[i];
   }
-  if (det_rand(&snake_seed) % 2 == 0) {
-    i += 1;
-  } else {
-    i -= 1;
-  }
-  i = i % 4;
-  i=abs(i);
-  game->board[snake->head_row][snake->head_col] = heads[i];
+
 }

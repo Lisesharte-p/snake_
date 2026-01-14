@@ -73,7 +73,7 @@ void GameController::update() {
         if (game->snakes[i].live) {
             live_snakes++;
            
-            if (i >= 2 && timestep % 6 == 0) {
+            if (i >= 2 ) {
                 random_turn(game, i);
             }
         }
