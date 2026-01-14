@@ -50,9 +50,9 @@ void redirect_snake(game_t *game, char input_direction) {
   row = game->snakes->head_row;
   col = game->snakes->head_col;
 
-  if (!game->snakes->live) {
-    return;
-  }
+  if (game->snakes->live) {
+
+  
 
   if (input_direction == 'w') {
     game->board[row][col] = 'W';
@@ -62,7 +62,7 @@ void redirect_snake(game_t *game, char input_direction) {
     game->board[row][col] = 'S';
   } else if (input_direction == 'd') {
     game->board[row][col] = 'D';
-  }
+  }}
   if(game->num_snakes>=2)
 {  row = (game->snakes+1)->head_row;
   col = (game->snakes+1)->head_col;

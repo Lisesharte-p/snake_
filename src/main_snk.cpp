@@ -13,8 +13,8 @@ int main(int argc, char* argv[]) {
 
 
 
-    font_global1.openFromFile("/usr/share/fonts/gnu-free/FreeMonoBold.otf");
-    SFMLRenderer renderer(800, 600);
+    font_global1.openFromFile("/usr/share/fonts/truetype/jetbrains-mono/JetBrainsMono-Bold.ttf");
+    SFMLRenderer renderer(1600, 1200);
     GameController controller;
     MapSelector map_selector(controller, renderer);
     
@@ -90,11 +90,11 @@ int main(int argc, char* argv[]) {
             sf::Text game_over(font_global1,"GAME OVER - Press R to restart",32);
 
             game_over.setString("GAME OVER - Press R to restart");
-            game_over.setCharacterSize(32);
+            game_over.setCharacterSize(16);
             game_over.setFillColor(sf::Color::Red);
             game_over.setStyle(sf::Text::Bold);
             game_over.setPosition(
-                sf::Vector2f((renderer.get_window().getSize().x - game_over.getLocalBounds().size.y) / 2,
+                sf::Vector2f((renderer.get_window().getSize().x - game_over.getLocalBounds().size.x) / 2,
                 renderer.get_window().getSize().y / 2)
             );
             renderer.get_window().draw(game_over);

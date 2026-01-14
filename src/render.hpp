@@ -22,7 +22,7 @@ private:
     sf::Text paused_text;
     sf::Text info_text;
     
-    void draw_cell(int row, int col, char c);
+    void draw_cell(int row, int col, char c,float cell_size);
 
     sf::Color get_color_for_char(char c);
     
