@@ -440,10 +440,10 @@ static char head_to_body(char c) {
 static unsigned int get_next_row(unsigned int cur_row, char c) {
 
   if (c=='v'||c=='s'||c=='S') {
-    return cur_row-1;
+    return cur_row+1;
   }
   if (c=='^'||c=='w'||c=='W') {
-    return cur_row+1;
+    return cur_row-1;
   }
   return cur_row;
 }
